@@ -2,69 +2,95 @@ import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class qLearnV2 extends Agent{
-	public static ArrayList<double[][]> qTable = new ArrayList<double[][]>();//[0][1-7]=state,[1][0-7]=action
+	
 	
 	qLearnV2(){
-		double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action
-		boolean addQValue = false;
+		ArrayList<double[][]> qTable = new ArrayList<double[][]>();//[0][1-7]=state,[1][0-7]=action and value
 		
-		for(int i = 0; i<input.length;i++) {
-			SA[0][i]=input[i];
-		}
-		
-		for(int i = 0; i<qTable.size();i++) {//checking if Q-value is already in Q-table
-			if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
-				addQValue=false;
-			}else {
-				addQValue=true;
-			}
-		}
-		if(addQValue==true) {//add new state
-			for(int i = 0;i<input.length;i++) {
-				SA[1][i]=0;//set Q-value to 0(initial)
-			}
-			qTable.add(SA);
-		}else {
-			QFunction(SA);
-		}
-	}
-	
-	double QFunction(double[][] SA) {
+		int moves = 0;
 		int[] origin = pos.clone();
-		double reward = 0;
-		double QValue = 0;
-		
-		vision();
-		reward = reward(pos,input,0);
-		fire(ThreadLocalRandom.current().nextInt(0,7),pos);
-		QValue = reward + maxQValue();
-		
-		return QValue;
-	}
-	
-	double maxQValue() {
-		double totalMaxQValue = 0;
-		int k = 0;
-		while(true) {
-			double[] maxQValue = {0,0};
-			int[] origin = pos.clone();
-			for(int j = 0; j<input.length;j++) {
-				fire(j,pos);
-				vision();
-				if(reward(pos,input,k)>maxQValue[0]) {
-					maxQValue[0]=reward(pos,input,k);
-					maxQValue[1]=j;
+		while(true) {//creating QTable;
+			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
+			boolean addQValue = false;
+			int storedIndex = 0;
+			
+			for(int i = 0; i<input.length;i++) {
+				SA[0][i]=input[i];
+			}
+			
+			for(int i = 0; i<qTable.size();i++) {//checking if Q-value is already in Q-table
+				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
+					storedIndex = i;
+					addQValue=false;
+				}else {
+					addQValue=true;
 				}
 			}
-			fire((int) maxQValue[1],pos);
-			totalMaxQValue =+ maxQValue[0];
+			
+			if(addQValue==true) {//add new state
+				for(int i = 0;i<input.length;i++) {
+					SA[1][i]=0;//set Q-value to 0(initial)
+				}
+				qTable.add(SA);
+				
+			}else {//update existing state
+				double[] QValue = QFunction(SA, moves);
+				qTable.get(storedIndex)[1][(int) QValue[0]] = QValue[1];
+			}
 			if(pos == main.end) {
 				pos = origin;
 				break;
 			}
-			k++;
+			moves++;
 		}
-		return totalMaxQValue;
+		
+		while(true) {
+			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
+			
+			for(int i = 0; i<qTable.size();i++) {//checking for matching state
+				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
+					int optimalAction = 0;
+					for(int j = 0; j<input.length;j++) {
+						if(qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction]) {
+							optimalAction = j;
+						}
+					}
+					history.add(pos);
+					fire(optimalAction,pos);
+				}
+			}
+		}
+	}
+	
+	double[] QFunction(double[][] SA, int i) {
+		
+		double reward = 0;
+		double epsilon = 1/(i * 0.9 + 1);
+		double[] QValue = new double[2];//[0]=action taken, [1]=QValue
+		int action = ThreadLocalRandom.current().nextInt(0,7);
+		
+		vision();
+		reward = reward(pos,input,i);
+		fire(action,pos);
+		QValue[1] = reward + (epsilon*maxQValue(i));
+		QValue[0] = action;
+
+		return QValue;
+	}
+	
+	double maxQValue(int i) {
+		double maxQValue = 0;
+		int[] origin = pos.clone();
+		for(int j = 0; j<input.length;j++) {
+			fire(j,pos);
+			vision();
+			if(reward(pos,input,i)>maxQValue) {
+				maxQValue=reward(pos,input,i+1);
+			}
+			pos = origin;
+		}
+		
+		return maxQValue;
 	}
 	
 	double reward(int[] pos, double[] input,int j){//generates reward based on distance from end point
@@ -82,14 +108,12 @@ public class qLearnV2 extends Agent{
 			}
 		}
 		
-		double epsilon = 1/j * 0.9 + 1;
-		
 		double reward = (100/((((Math.abs(pos[0]-main.start[0]))^2)+((Math.abs(pos[1]-main.start[1]))^2))^(1/2)))-maxSigma-j;
 		if(pos==main.end) {
 			reward=+100;
-			return reward*epsilon;
+			return reward;
 		}else{
-			return reward*epsilon;
+			return reward;
 		}
 	}
 	

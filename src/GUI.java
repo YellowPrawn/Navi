@@ -4,7 +4,8 @@ import java.util.Arrays;
 
 public class GUI extends JFrame{
 		
-	neuralNetwork agent = new neuralNetwork();
+	neuralNetwork NNagent = new neuralNetwork();
+	qLearnV2 Qagent = new qLearnV2();
 	
 	public GUI() {
 		
@@ -39,9 +40,13 @@ public class GUI extends JFrame{
 			for(int i = 0; i<main.obstacles.size(); i++) {//drawing obstacles
 				g.fillRect((main.obstacles.get(i)[0])*main.resolution, (main.obstacles.get(i)[1])*main.resolution, main.resolution, main.resolution);
 			}
-			for(int i=0; i<agent.history.size();i++) {
+			for(int i=0; i<NNagent.history.size();i++) {
 				g.setColor(Color.green);
-				g.fillRect((agent.history.get(0)[0]*main.resolution)+(main.resolution/4), (agent.history.get(1)[1]*main.resolution)+(main.resolution/4), main.resolution/2, main.resolution/2);
+				g.fillRect((NNagent.history.get(0)[0]*main.resolution)+(main.resolution/4), (NNagent.history.get(1)[1]*main.resolution)+(main.resolution/4), main.resolution/2, main.resolution/2);
+			}
+			for(int i=0; i<Qagent.history.size();i++) {
+				g.setColor(Color.magenta);
+				g.fillRect((Qagent.history.get(0)[0]*main.resolution)+(main.resolution/4), (Qagent.history.get(1)[1]*main.resolution)+(main.resolution/4), main.resolution/2, main.resolution/2);
 			}
 		}
 	}
