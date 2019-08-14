@@ -25,35 +25,46 @@ public class qLearnV2 extends Agent{
 			}
 			qTable.add(SA);
 		}else {
-			
+			QFunction(SA);
 		}
 	}
 	
 	double QFunction(double[][] SA) {
 		int[] origin = pos.clone();
 		double reward = 0;
-		int i=0;
-		while(pos!=main.end) {//repeat until endpoint is reached
-			vision();
-			reward =+ reward(pos,input,i);
-			fire(ThreadLocalRandom.current().nextInt(0,7),pos);
-			maxQValue(i);
-			i++;
-		}
+		double QValue = 0;
+		
+		vision();
+		reward = reward(pos,input,0);
+		fire(ThreadLocalRandom.current().nextInt(0,7),pos);
+		QValue = reward + maxQValue();
+		
+		return QValue;
 	}
 	
-	double maxQValue(int i) {
-		double maxQValue = 0;
-		
-		for(int j = 0; j<input.length;j++) {
+	double maxQValue() {
+		double totalMaxQValue = 0;
+		int k = 0;
+		while(true) {
+			double[] maxQValue = {0,0};
 			int[] origin = pos.clone();
-			fire(j,pos);
-			vision();
-			if(reward(pos,input,i)>maxQValue) {
-				maxQValue=reward(pos,input,i);
+			for(int j = 0; j<input.length;j++) {
+				fire(j,pos);
+				vision();
+				if(reward(pos,input,k)>maxQValue[0]) {
+					maxQValue[0]=reward(pos,input,k);
+					maxQValue[1]=j;
+				}
 			}
+			fire((int) maxQValue[1],pos);
+			totalMaxQValue =+ maxQValue[0];
+			if(pos == main.end) {
+				pos = origin;
+				break;
+			}
+			k++;
 		}
-		return maxQValue;
+		return totalMaxQValue;
 	}
 	
 	double reward(int[] pos, double[] input,int j){//generates reward based on distance from end point
@@ -71,12 +82,14 @@ public class qLearnV2 extends Agent{
 			}
 		}
 		
+		double epsilon = 1/j * 0.9 + 1;
+		
 		double reward = (100/((((Math.abs(pos[0]-main.start[0]))^2)+((Math.abs(pos[1]-main.start[1]))^2))^(1/2)))-maxSigma-j;
 		if(pos==main.end) {
-			reward=+1000;
-			return reward;
+			reward=+100;
+			return reward*epsilon;
 		}else{
-			return reward;
+			return reward*epsilon;
 		}
 	}
 	
