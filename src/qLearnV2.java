@@ -33,7 +33,7 @@ public class qLearnV2 extends Agent{
 				}
 				qTable.add(SA);
 				
-			}else {//update existing state
+			}else{//update existing state
 				double[] QValue = QFunction(SA, moves);
 				qTable.get(storedIndex)[1][(int) QValue[0]] = QValue[1];
 			}
@@ -107,14 +107,14 @@ public class qLearnV2 extends Agent{
 				maxSigma=sigma[i];
 			}
 		}
-		
-		double reward = (100/((((Math.abs(pos[0]-main.start[0]))^2)+((Math.abs(pos[1]-main.start[1]))^2))^(1/2)))-maxSigma-j;
-		if(pos==main.end) {
+		double reward = 0;
+		try {
+			reward = (100/((((Math.abs(pos[0]-main.end[0]))^2)+((Math.abs(pos[1]-main.end[1]))^2))^(1/2)))-maxSigma-j;
+		} catch (Error e) {
 			reward=+100;
-			return reward;
-		}else{
-			return reward;
 		}
+		return reward;
+		
 	}
 	
 }
