@@ -8,6 +8,7 @@ public class Agent {
 	public static ArrayList<int[]> history = new ArrayList<int[]>();
 	
 	double[] input = new double[8]; //fMain, fLeft, fRight, left, right, bleft, bright, back
+	//the greater the input value, the further away the agent is from the obstacle/wall
 	int[] pos = main.start.clone();
 	
 	Agent(){
@@ -60,35 +61,35 @@ public class Agent {
 		}
 	}
 	
-	void fire(int i,int[] a) { //possible movements by agent
+	void fire(int i,int[] a) { //possible movements by agent (action,movement)
 		switch(i) {
 			case 0:
-				a[0]++;
+				a[0]++;//front
 				break;
 			case 1:
-				a[0]++;
+				a[0]++;//front right
 				a[1]++;
 				break;
 			case 2:
-				a[0]++;
+				a[0]++;//front left
 				a[1]--;
 				break;
 			case 3:
-				a[1]++;
+				a[1]++;//right
 				break;
 			case 4:
-				a[1]--;
+				a[1]--;//left
 				break;
 			case 5:
-				a[0]--;
+				a[0]--;//back right
 				a[1]++;
 				break;
 			case 6:
-				a[0]--;
+				a[0]--;//back left
 				a[1]--;
 				break;
 			case 7:
-				a[0]--;
+				a[0]--;//back
 				break;
 		}
 	}

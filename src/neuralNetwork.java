@@ -18,7 +18,7 @@ public class neuralNetwork extends Agent{
 					fire(i,pos);//activates specific output
 				}	
 			}
-			if(origin[0]==pos[0]&&origin[1]==pos[1]) {//if agent does'nt move and is stuck, it takes a random direction
+			if(origin[0]==pos[0]&&origin[1]==pos[1]) {//if agent doesn't move and is stuck, it takes a random direction
 				fire(ThreadLocalRandom.current().nextInt(0,7),pos);
 			}
 			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {//ends the process when agent reaches end point
