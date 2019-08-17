@@ -14,6 +14,7 @@ public class qLearnV2 extends Agent{
 			boolean addQValue = true;
 			int storedIndex = 0;
 			
+			vision();
 			for(int i = 0; i<input.length;i++) {
 				SA[0][i]=input[i];
 			}
@@ -47,27 +48,49 @@ public class qLearnV2 extends Agent{
 			System.out.println(moves);
 		}
 		
-		System.out.println("pathfinding ready");
+		for(int i = 0; i<qTable.size();i++) {//printing q-table
+			System.out.println(Arrays.toString(qTable.get(i)[1]));
+		}
+		
+		System.out.println("initializing pathfinding...");
 		while(true) {
 			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
+			boolean newState = true;
+			int rand = ThreadLocalRandom.current().nextInt(0,7);
+			int optimalAction = 0;
+			
+			vision();
+			for(int i = 0; i<input.length;i++) {//adding values into SA
+				SA[0][i]=input[i];
+			}
 			
 			for(int i = 0; i<qTable.size();i++) {//checking for matching state
 				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
-					int optimalAction = 0;
+					
+					System.out.println(Arrays.toString(qTable.get(i)[1]));
 					for(int j = 0; j<input.length;j++) {
-						if(qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction]) {
+						if(qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction]) {//finding best action to take at this state
 							optimalAction = j;
 						}
 					}
-					history.add(pos);
-					fire(optimalAction);
+					
+					newState = false;
 				}
 			}
+			if(newState==true) {
+				optimalAction = rand;
+			}
+			
+			fire(optimalAction);
+			
+			//System.out.println(Arrays.toString(pos));
 			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {
 				System.out.println(history.size());
 				pos = origin;
 				break;
 			}
+			history.add(pos);
+			//System.out.println(Arrays.toString(pos));
 		}
 	}
 	
@@ -88,7 +111,6 @@ public class qLearnV2 extends Agent{
 		System.out.println(Arrays.toString(pos));*/
 		QValue[1] = reward + (epsilon*maxQValue(i));
 		QValue[0] = action;
-		
 		return QValue;
 	}
 	
@@ -124,13 +146,13 @@ public class qLearnV2 extends Agent{
 		
 		double reward = 0;
 		try {
-			reward = (100/((((Math.abs(pos[0]-main.end[0]))^2)+((Math.abs(pos[1]-main.end[1]))^2))^(1/2)))-maxSigma-j;
+			reward = (100/((((Math.abs(pos[0]-main.end[0]))^2)+((Math.abs(pos[1]-main.end[1]))^2))^(1/2)))-0.001*(maxSigma+j);
 		} catch (Exception e) {
-			reward = 100-maxSigma-j;//will output an error if pos = end since displacement is 0 (cannot divide by 0)
+			reward = 100-0.001*(maxSigma+j);//will output an error if pos = end since displacement is 0 (cannot divide by 0)
 		}
 		
 		if(main.obstacles.contains(pos)) {
-			reward =- 1000;
+			reward =- 100;//punishment for entering obstacle location
 		}
 		return reward;
 		
@@ -140,11 +162,6 @@ public class qLearnV2 extends Agent{
 		int randAction = ThreadLocalRandom.current().nextInt(0,7);
 		return randAction;
 	}
-	
-	
-	
-	//broken code here. wall checking errors? no kill switch if bot is stuck here.
-	
 	
 	
 	void fire(int i) { //possible movements by agent (action,direction)
