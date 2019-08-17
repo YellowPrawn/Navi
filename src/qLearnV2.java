@@ -38,7 +38,7 @@ public class qLearnV2 extends Agent{
 				double[] QValue = QFunction(SA, moves, tempOrigin);
 				qTable.get(storedIndex)[1][(int) QValue[0]] = QValue[1];
 			}
-			if(pos == main.end) {
+			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {
 				System.out.println("training complete");
 				pos = origin;
 				break;
@@ -60,10 +60,10 @@ public class qLearnV2 extends Agent{
 						}
 					}
 					history.add(pos);
-					fire(optimalAction,pos);
+					fire(optimalAction);
 				}
 			}
-			if(pos == main.end) {
+			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {
 				System.out.println(history.size());
 				pos = origin;
 				break;
@@ -80,13 +80,12 @@ public class qLearnV2 extends Agent{
 		
 		vision();
 		reward = reward(pos,input,i);
-		fire(action,pos);
-		System.out.println(action);
-		if(origin[0]==pos[0]&&origin[1]==pos[1]) {
+		fire(action);
+		/*if(origin[0]==pos[0]&&origin[1]==pos[1]) {
 			action = randomAction();
-			fire(action,pos);
+			fire(action);
 		}
-		System.out.println(Arrays.toString(pos));
+		System.out.println(Arrays.toString(pos));*/
 		QValue[1] = reward + (epsilon*maxQValue(i));
 		QValue[0] = action;
 		
@@ -97,7 +96,7 @@ public class qLearnV2 extends Agent{
 		double maxQValue = 0;
 		int[] origin = pos.clone();
 		for(int j = 0; j<input.length;j++) {
-			fire(j,pos);
+			fire(j);
 			vision();
 			if(reward(pos,input,i)>maxQValue) {
 				maxQValue=reward(pos,input,i+1);
@@ -129,6 +128,10 @@ public class qLearnV2 extends Agent{
 		} catch (Exception e) {
 			reward = 100-maxSigma-j;//will output an error if pos = end since displacement is 0 (cannot divide by 0)
 		}
+		
+		if(main.obstacles.contains(pos)) {
+			reward =- 1000;
+		}
 		return reward;
 		
 	}
@@ -144,53 +147,63 @@ public class qLearnV2 extends Agent{
 	
 	
 	
-	@Override
-	void fire(int i,int[] a) { //possible movements by agent (action,direction)
-		switch(i) {
+	void fire(int i) { //possible movements by agent (action,direction)
+		int[] a = pos.clone();
+		int x = a[0];
+		int y = a[1];
+		
+		int xWalls = main.grid[0];
+		int yWalls = main.grid[1];
+		
+		switch(i) { //if statements prevent bot from exiting the grid
 			case 0:
-				if((input[0]!= 1)&&(a[0]<main.grid[0])) {//move forward
+				if(x+1 != xWalls) {//move forward
 					a[0]++;
 				}
 				break;
 			case 1:
-				if((input[1]!= 1)&&(a[0]<main.grid[0])&&(a[1]<main.grid[1])) {//move forward right
+				if(x+1 != xWalls && y+1 != yWalls) {//move forward right
 					a[0]++;
 					a[1]++;
 				}
 				break;
 			case 2:
-				if((input[2]!= 1)&&(a[0]<main.grid[0])&&(a[1]>0)) {//move forward back
+				if(x+1 != xWalls && y-1!= -1) {//move forward back
 					a[0]++;
 					a[1]--;
 				}
 				break;
 			case 3:
-				if((input[3]!= 1)&&(a[1]<main.grid[1])) {//move right
+				if(y+1 != yWalls) {//move right
 					a[1]++;
 				}
 				break;
 			case 4:
-				if((input[4]!= 1)&&(a[1]>0)) {//move left
+				if(y-1 != -1) {//move left
 					a[1]--;
 				}
 				break;
 			case 5:
-				if((input[5]!= 1)&&(a[0]>0)&&(a[1]<main.grid[1])) {//move back right
+				if(x-1 != -1 && y+1 != yWalls) {//move back right
 					a[0]--;
 					a[1]++;
 				}
 				break;
 			case 6:
-				if((input[6]!= 1)&&(a[0]>0)&&(a[1]>0)) {//move back left
+				if(x-1 != -1 && y-1 != -1) {//move back left
 					a[0]--;
 					a[1]--;
 				}
 				break;
 			case 7:
-				if((input[1]!= 1)&&(a[0]>0)) {//move back
+				if(x-1 != -1) {//move back
 					a[0]--;
 				}
 				break;
+			default:
+				System.out.println("error");
+				break;
 		}
+		pos = a.clone();
 	}
 }
