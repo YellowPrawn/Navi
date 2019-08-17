@@ -23,8 +23,7 @@ public class neuralNetwork extends Agent{
 			}
 			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {//ends the process when agent reaches end point
 				vision();
-				System.out.println(Arrays.toString(input));
-				System.out.println(history.size());//prints number of steps taken to achieve goal
+				System.out.println("NN agent moves: " + history.size());//prints number of steps taken to achieve goal
 				break;
 			}
 			history.add(pos);

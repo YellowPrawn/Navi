@@ -5,13 +5,14 @@ import java.util.stream.IntStream;
 
 public class Agent {
 	
-	public static ArrayList<int[]> history = new ArrayList<int[]>();
+	ArrayList<int[]> history = new ArrayList<int[]>();
 	
 	double[] input = new double[8]; //fMain, fLeft, fRight, left, right, bleft, bright, back
 	//the greater the input value, the further away the agent is from the obstacle/wall
 	int[] pos = main.start.clone();
 	
 	Agent(){
+		history.clear();
 		main.obstacles.addAll(Arrays.asList(main.obstacle));
 		
 		for(int i=0;i<main.grid[0];i++) {//placing walls of window as main.obstacles

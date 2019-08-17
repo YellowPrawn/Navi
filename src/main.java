@@ -33,9 +33,14 @@ public class main /*implements Runnable*/{
 			obstacle[i][0]= pos[0];
 			obstacle[i][1]= pos[1];
 		}*/
-		
-		neuralNetwork NNagent = new neuralNetwork();
-		qLearnV2 Qagent = new qLearnV2();
+		for(int i = 0; i < 50; i++) {
+			neuralNetwork NNagent = new neuralNetwork();
+			System.out.println(i);
+		}
+		for(int i = 0; i < 50; i++) {
+			qLearnV2 Qagent = new qLearnV2();
+			System.out.println(i);
+		}
 		
 	}
 	
