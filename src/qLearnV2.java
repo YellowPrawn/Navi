@@ -56,8 +56,8 @@ public class qLearnV2 extends Agent{
 		while(true) {
 			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
 			boolean newState = true;
-			int rand = ThreadLocalRandom.current().nextInt(0,7);
 			int optimalAction = 0;
+			int rand;
 			
 			vision();
 			for(int i = 0; i<input.length;i++) {//adding values into SA
@@ -68,6 +68,7 @@ public class qLearnV2 extends Agent{
 				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
 					
 					System.out.println(Arrays.toString(qTable.get(i)[1]));
+					System.out.println(Arrays.toString(pos));
 					for(int j = 0; j<input.length;j++) {
 						if(qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction]) {//finding best action to take at this state
 							optimalAction = j;
@@ -75,13 +76,20 @@ public class qLearnV2 extends Agent{
 					}
 					
 					newState = false;
+					System.out.println(optimalAction);
 				}
 			}
 			if(newState==true) {
-				optimalAction = rand;
+				optimalAction = randomAction();
 			}
 			
 			fire(optimalAction);
+			while(origin[0]==pos[0]&&origin[1]==pos[1]) {
+				rand = randomAction();
+				System.out.println(Arrays.toString(pos));
+				System.out.println(rand);
+				fire(rand);
+			}
 			
 			//System.out.println(Arrays.toString(pos));
 			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {
@@ -97,7 +105,7 @@ public class qLearnV2 extends Agent{
 	double[] QFunction(double[][] SA, int i, int[] origin) {
 		
 		double reward = 0;
-		double epsilon = 1/(i * 0.9 + 1);
+		double epsilon = 1/((i+1) * 0.9);
 		double[] QValue = new double[2];//[0]=action taken, [1]=QValue
 		int action = randomAction();
 		
