@@ -1,95 +1,138 @@
-/*import java.util.ArrayList;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class qLearn extends Agent{
-	public static ArrayList<double[][]> qTable = new ArrayList<double[][]>();
+	
 	qLearn(){
-		int i = 0;
-		while(true) {
-			QFunction(i);
+		ArrayList<double[][]> qTable = new ArrayList<double[][]>();//[0][1-7]=state,[1][0-7]=action and value
+		
+		int moves = 0;
+		int[] origin = pos.clone();
+		while(true) {//creating QTable;
+			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
+			boolean addQValue = true;
+			int storedIndex = 0;
 			
-			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {//ends the process when agent reaches end point
-				System.out.println(history.size());//prints number of steps taken to achieve goal
+			vision();
+			for(int i = 0; i<input.length;i++) {
+				SA[0][i]=input[i];
+			}
+			
+			for(int i = 0; i<qTable.size();i++) {//checking if Q-value is already in Q-table
+				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
+					storedIndex = i;
+					addQValue=false;
+				}else {
+					addQValue=true;
+				}
+			}
+			
+			if(addQValue==true) {//add new state
+				for(int i = 0;i<input.length;i++) {
+					SA[1][i]=0;//set Q-value to 0(initial)
+				}
+				qTable.add(SA);
+				
+			}else{//update existing state
+				int[] tempOrigin = pos.clone();
+				double[] QValue = QFunction(SA, moves, tempOrigin);
+				qTable.get(storedIndex)[1][(int) QValue[0]] = QValue[1];
+			}
+			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {
+				System.out.println("Q training moves: "+ moves);
+				pos = origin;
+				break;
+			}
+			moves++;
+		}
+		
+		/*for(int i = 0; i<qTable.size();i++) {//printing q-table
+			System.out.println(Arrays.toString(qTable.get(i)[1]));
+		}*/
+
+		for(int k = 0; k < 100000; k++) {
+			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
+			boolean newState = true;
+			int optimalAction = 0;
+			int rand;
+			
+			vision();
+			for(int i = 0; i<input.length;i++) {//adding values into SA
+				SA[0][i]=input[i];
+			}
+			
+			for(int i = 0; i<qTable.size();i++) {//checking for matching state
+				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {				
+					for(int j = 0; j<input.length;j++) {
+						if(qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction]) {//finding best action to take at this state
+							optimalAction = j;
+						}
+					}
+					
+					newState = false;
+				}
+			}
+			if(newState==true) {
+				optimalAction = randomAction();
+			}
+			
+			fire(optimalAction);
+			while(origin[0]==pos[0]&&origin[1]==pos[1]) {
+				rand = randomAction();
+				fire(rand);
+			}
+			
+			//System.out.println(Arrays.toString(pos));
+			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {
+				System.out.println("Q agent moves: " + history.size());
+				pos = origin;
 				break;
 			}
 			history.add(pos);
-			i++;
+			//System.out.println(Arrays.toString(pos));
+			if(k == 99999) {
+				System.out.println("null");
+			}
 		}
 	}
 	
-	void QFunction(int moves){
+	double[] QFunction(double[][] SA, int i, int[] origin) {
+		
+		double reward = 0;
+		double epsilon = 1/((i+1) * 0.9);
+		double[] QValue = new double[2];//[0]=action taken, [1]=QValue
+		int action = randomAction();
 		
 		vision();
-		double[][] QSA = new double[2][8];//Q-value. [0][0-7]:state, [1][1]:index=action, element=value
-		for(int i = 0; i<input.length; i++) {//generates state
-			QSA[0][i] = input[i];
+		reward = reward(pos,input,i);
+		fire(action);
+		/*if(origin[0]==pos[0]&&origin[1]==pos[1]) {
+			action = randomAction();
+			fire(action);
 		}
-			
-		boolean addQValue = false;
-			
-		for(int i = 0; i < qTable.size();i++) {//check if current state is already in Q-table
-			if((qTable.get(i)[0][0]==QSA[0][0])&&(qTable.get(i)[0][1]==QSA[0][1])&&(qTable.get(i)[0][2]==QSA[0][2])&&(qTable.get(i)[0][3]==QSA[0][3])&&(qTable.get(i)[0][4]==QSA[0][4])&&(qTable.get(i)[0][5]==QSA[0][5])&&(qTable.get(i)[0][6]==QSA[0][6])&&(qTable.get(i)[0][7]==QSA[0][7])) {
-				addQValue = true;
-				updateQTable(QSA,input);
-				for(int j = 0; j <input.length;j++) {
-					QValue(j,maxQSA(j,QSA,input),QSA,episilon(moves));
-				}
-				
-				break;
-			}else{
-				addQValue=true;
-			}
-		}
-		if(addQValue==true) {//add new state
-			for(int j = 0;j<input.length;j++) {
-				QSA[1][j] = 0;
-			}
-			qTable.add(QSA);
-		}
-	}
-
-	double QValue(int action, double maxQSA, double[][] QSA, float epsilon) {
-		double QValue = QSA[1][action]+epsilon*maxQSA;
+		System.out.println(Arrays.toString(pos));*/
+		QValue[1] = reward + (epsilon*maxQValue(i));
+		QValue[0] = action;
 		return QValue;
 	}
 	
-	float episilon(int moves) {
-		float episilon = (float) (moves*0.9);
-		return episilon;
-	}
-	
-	double maxQSA(int action, double[][] QSA, double[] input){
+	double maxQValue(int i) {
+		double maxQValue = 0;
 		int[] origin = pos.clone();
-		
-		double[] nextQSA = new double[8];
-		fire(action,pos);
-		int[] tempOrigin = pos.clone();
-		for(int j = 0;j<input.length;j++) {//check values of all actions at state
-			fire(j,pos);
-			nextQSA[j] = reward(pos,input);
-			pos = tempOrigin.clone();
-		}
-		
-		int maxQSA=0;
-		for(int i = 0;i<input.length;i++) {
-			if(nextQSA[i]>nextQSA[maxQSA]) {
-				maxQSA=i;
+		for(int j = 0; j<input.length;j++) {
+			fire(j);
+			vision();
+			if(reward(pos,input,i)>maxQValue) {
+				maxQValue=reward(pos,input,i+1);
 			}
+			pos = origin;
 		}
-		pos = origin.clone();
-		return(maxQSA);
+		
+		return maxQValue;
 	}
 	
-	void updateQTable(double[][] QSA, double[] input) {
-		int[] origin = pos.clone();
-		for(int j = 0;j<input.length;j++) {//check values of all actions at state
-			fire(j,pos);
-			QSA[1][j]=reward(pos,input);
-			pos = origin.clone();
-		}
-	}
-	
-	double reward(int[] pos, double[] input){//generates reward based on distance from end point
+	double reward(int[] pos, double[] input,int j){//generates reward based on distance from end point
 		double[] weight = {5.0,3.0,3.0,1.0,1.0,0.9,0.9,0.5};
 		double[] sigma = new double[8];
 		
@@ -104,12 +147,83 @@ public class qLearn extends Agent{
 			}
 		}
 		
-		double reward = (1/((((Math.abs(pos[0]-main.start[0]))^2)+((Math.abs(pos[1]-main.start[1]))^2))^(1/2)))-maxSigma;
-		if(pos==main.end) {
-			reward=+10000000;
-			return reward;
-		}else{
-			return reward;
+		double reward = 0;
+		try {
+			reward = (100/((((Math.abs(pos[0]-main.end[0]))^2)+((Math.abs(pos[1]-main.end[1]))^2))^(1/2)))-0.001*(maxSigma+j);
+		} catch (Exception e) {
+			reward = 100-0.001*(maxSigma+j);//will output an error if pos = end since displacement is 0 (cannot divide by 0)
 		}
+		
+		if(main.obstacles.contains(pos)) {
+			reward =- 100;//punishment for entering obstacle location
+		}
+		return reward;
+		
 	}
-}*/
+	
+	int randomAction() {
+		int randAction = ThreadLocalRandom.current().nextInt(0,7);
+		return randAction;
+	}
+	
+	
+	void fire(int i) { //possible movements by agent (action,direction)
+		int[] a = pos.clone();
+		int x = a[0];
+		int y = a[1];
+		
+		int xWalls = main.grid[0];
+		int yWalls = main.grid[1];
+		
+		switch(i) { //if statements prevent bot from exiting the grid
+			case 0:
+				if(x+1 != xWalls) {//move forward
+					a[0]++;
+				}
+				break;
+			case 1:
+				if(x+1 != xWalls && y+1 != yWalls) {//move forward right
+					a[0]++;
+					a[1]++;
+				}
+				break;
+			case 2:
+				if(x+1 != xWalls && y-1!= -1) {//move forward back
+					a[0]++;
+					a[1]--;
+				}
+				break;
+			case 3:
+				if(y+1 != yWalls) {//move right
+					a[1]++;
+				}
+				break;
+			case 4:
+				if(y-1 != -1) {//move left
+					a[1]--;
+				}
+				break;
+			case 5:
+				if(x-1 != -1 && y+1 != yWalls) {//move back right
+					a[0]--;
+					a[1]++;
+				}
+				break;
+			case 6:
+				if(x-1 != -1 && y-1 != -1) {//move back left
+					a[0]--;
+					a[1]--;
+				}
+				break;
+			case 7:
+				if(x-1 != -1) {//move back
+					a[0]--;
+				}
+				break;
+			default:
+				System.out.println("error");
+				break;
+		}
+		pos = a.clone();
+	}
+}

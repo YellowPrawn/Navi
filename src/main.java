@@ -38,7 +38,7 @@ public class main /*implements Runnable*/{
 			System.out.println(i);
 		}
 		for(int i = 0; i < 50; i++) {
-			qLearnV2 Qagent = new qLearnV2();
+			qLearn Qagent = new qLearn();
 			System.out.println(i);
 		}
 		
