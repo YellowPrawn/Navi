@@ -11,7 +11,7 @@ public class main{
 	public static int[] end = {8,8};
 	
 	static Integer[][] obstacle = {{1,2},{6,4},{5,6},{3,8},{2,7},{3,3}};
-	static Integer[][] obstacle2 ={{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()},{rand(),rand()}};//post training obstacles
+	static Integer[][] obstacle2 ={{9, 4}, {3, 4}, {2, 2}, {1, 7}, {0,2}, {5, 5}};//post training obstacles
 	
 	public static ArrayList<Integer[]> obstacles = new ArrayList<Integer[]>();
 	public static ArrayList<Integer[]> obstacles2 = new ArrayList<Integer[]>();
@@ -41,16 +41,23 @@ public class main{
 			obstacles2.add(wall);
 		}
 		for(int i = 0; i < 50; i++) {//creating 50 neural network agents
-			System.out.println(i + "init");
+			System.out.println(i + " init");
 			startTime = System.nanoTime();
 			neuralNetwork NNagent = new neuralNetwork();
 			endTime = System.nanoTime();
 			System.out.println(i + " end: " + (endTime-startTime));
 		}
 		for(int i = 0; i < 50; i++) {//creating 50 qLearning agents
-			System.out.println(i + "init");
+			System.out.println(i + " init");
 			startTime = System.nanoTime();
 			qLearn QAgent = new qLearn();
+			endTime = System.nanoTime();
+			System.out.println(i + " end: " + (endTime-startTime));
+		}
+		for(int i = 0; i < 50; i++) {//creating 50 DQN agents
+			System.out.println(i + " init");
+			startTime = System.nanoTime();
+			DQN DQNAgent = new DQN();
 			endTime = System.nanoTime();
 			System.out.println(i + " end: " + (endTime-startTime));
 		}

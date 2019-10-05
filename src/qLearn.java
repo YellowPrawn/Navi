@@ -8,37 +8,14 @@ public class qLearn extends Agent{
 		int[] origin = pos.clone();
 		while(true) {//creating QTable;
 			double[][] SA = new double[2][8];//[0][1-7]=state,[1][0-7]=action and value
-			boolean addQValue = true;
-			int storedIndex = 0;
+
 			vision();
-			for(int i = 0; i<input.length;i++) {
-				SA[0][i]=input[i];
-			}
-			for(int i = 0; i<qTable.size();i++) {//checking if Q-value is already in Q-table
-
-				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {
-
-					storedIndex = i;
-					addQValue=false;
-				}else {
-					addQValue=true;
-				}
-			}
-			if(addQValue==true) {//add new state
-				for(int i = 0;i<input.length;i++) {
-					SA[1][i]=0;//set Q-value to 0(initial)
-				}
-				qTable.add(SA);
-			}else{//update existing state
-				int[] tempOrigin = pos.clone();
-				double[] QValue = QFunction(SA, moves, tempOrigin);
-				qTable.get(storedIndex)[1][(int) QValue[0]] = QValue[1];
-
-
-
-			}
+			
+			SA = setSA(SA);
+			qTable = checkTable(qTable, SA, moves);
+			
 			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {//activates if agents is at end point
-				System.out.println("Q training moves: "+ moves);
+				System.out.println(training() + moves);
 				pos = origin;
 				break;
 			}
@@ -51,21 +28,21 @@ public class qLearn extends Agent{
 			int optimalAction = 0;
 			int rand;
 			vision2();
-			for(int i = 0; i<input.length;i++) {//adding values into SA
-				SA[0][i]=input[i];
-			}
+			SA = setSA(SA);
+			
 			for(int i = 0; i<qTable.size();i++) {//checking for matching state
 
 				if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {
 
 					for(int j = 0; j<input.length;j++) {
-						if(qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction]) {//finding best action to take at this state optimalAction = j;
+						if(value(qTable, i, j, optimalAction)) {//finding best action to take at this state 
+							optimalAction = j;
 						}
 					}
 					newState = false;
 				}
 			}
-			if(newState==true) {//take a random action if this state wasnt accounted for in training
+			if(newState==true) {//take a random action if this state was not accounted for in training
 				optimalAction = randomAction();
 			}
 			fire(optimalAction);//take the optimal action
@@ -74,7 +51,7 @@ public class qLearn extends Agent{
 				fire(rand);
 			}
 			if(main.end[0]==pos[0]&&main.end[1]==pos[1]) {//activates if agents is at end point
-				System.out.println("Q agent moves: " + history.size());
+				System.out.println(testing() + history.size());
 				pos = origin;
 				break;
 			}
@@ -84,6 +61,58 @@ public class qLearn extends Agent{
 			}
 		}
 	}
+	
+	boolean value(ArrayList<double[][]> qTable, int i, int j, int optimalAction) {
+		return qTable.get(i)[1][j]>qTable.get(i)[1][optimalAction];
+	}
+	
+	String training() {
+		return "Q training moves: ";
+	}
+	String testing() {
+		return "Q agent moves: ";
+	}
+	
+	double[][] setSA(double[][] SA){
+		for(int i = 0; i<input.length;i++) {
+			SA[0][i]=input[i];
+		}
+		return SA;
+	}
+	
+	ArrayList<double[][]> checkTable(ArrayList<double[][]> qTable, double[][] SA, int moves) {//checks if Q-value has been declared
+		
+		
+		boolean addQValue = true;
+		int storedIndex = 0;
+		
+		for(int i = 0; i<qTable.size();i++) {//checking if Q-value is already in Q-table
+
+			if((SA[0][0]==qTable.get(i)[0][0])&&(SA[0][1]==qTable.get(i)[0][1])&&(SA[0][2]==qTable.get(i)[0][2])&&(SA[0][3]==qTable.get(i)[0][3])&&(SA[0][4]==qTable.get(i)[0][4])&&(SA[0][5]==qTable.get(i)[0][5])&&(SA[0][6]==qTable.get(i)[0][6])&&(SA[0][7]==qTable.get(i)[0][7])) {
+				storedIndex = i;
+				addQValue=false;
+			}else {
+				addQValue=true;
+			}
+		}
+		if(addQValue==true) {//add new state
+			for(int i = 0;i<input.length;i++) {
+				SA[1][i]=0;//set Q-value to 0(initial)
+			}
+			qTable.add(SA);
+		}else{//update existing state
+			int[] tempOrigin = pos.clone();
+			double[] QValue = calcValue(SA, moves, tempOrigin);
+			qTable.get(storedIndex)[1][(int) QValue[0]] = QValue[1];
+		}
+		
+		return qTable;
+	}
+	
+	double[] calcValue(double[][] SA, int moves, int[] tempOrigin) {
+		return QFunction(SA, moves, tempOrigin);
+	}
+	
 	double[] QFunction(double[][] SA, int i, int[] origin) {
 		double reward = 0;
 		double epsilon = 1/((i+1) * 0.9);
@@ -160,14 +189,9 @@ public class qLearn extends Agent{
 			}
 			break;
 		case 2:
-			if(x+1 != xWalls && y
-			-1!=
-			-1) {//move forward left
-
+			if(x+1 != xWalls && y-1!=-1) {//move forward left
 				a[0]++;
-				a[1]--
-				;
-
+				a[1]--;
 			}
 			break;
 		case 3:
@@ -176,43 +200,25 @@ public class qLearn extends Agent{
 			}
 			break;
 		case 4:
-			if(y
-					-1 !=
-					-1) {//move left
-				a[1]--
-				;
-
+			if(y-1 !=-1) {//move left
+				a[1]--;
 			}
 			break;
 		case 5:
-			if(x
-					-1 !=
-					-1 && y+1 != yWalls) {//move back right
-				a[0]--
-				;
+			if(x-1 !=-1 && y+1 != yWalls) {//move back right
+				a[0]--;
 				a[1]++;
 			}
 			break;
 		case 6:
-			if(x
-					-1 !=
-					-1 && y
-					-1 !=
-					-1) {//move back left
-				a[0]--
-				;
-				a[1]--
-				;
-
+			if(x-1 !=-1 && y-1 !=-1) {//move back left
+				a[0]--;
+				a[1]--;
 			}
 			break;
 		case 7:
-			if(x
-					-1 !=
-					-1) {//move back
-				a[0]--
-				;
-
+			if(x-1 !=-1) {//move back
+				a[0]--;
 			}
 			break;
 		default:
@@ -222,4 +228,5 @@ public class qLearn extends Agent{
 		}
 		pos = a.clone();
 	}
+
 }
